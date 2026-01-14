@@ -106,7 +106,11 @@ python training_scripts/test.py \
   --logit_lens_top_k 5
 ```
 
-## 6. Availability of models and supplementary materials
+## 6. Acknowledgments
+
+We thank the authors of **GazeFormer** (Mondal et al., CVPR 2023) for their open-source codebase, which provided the foundation for our transformer-based scanpath prediction architecture. We also acknowledge the authors of **llava-interp** (Neo et al.) for their implementation of logit lens extraction from vision-language models, which we adapted for semantic feature extraction in our work.
+
+## 7. Availability of models and supplementary materials
 
 Pretrained weights, training logs and additional qualitative results for **LogitGaze** and **LogitGaze‑Med** are available upon reasonable request.
 For access to checkpoints or supplementary materials, please contact the corresponding author at: d.lvov@innopolis.ru.
