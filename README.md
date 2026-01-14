@@ -106,24 +106,8 @@ python training_scripts/test.py \
   --logit_lens_top_k 5
 ```
 
-## 6. Notes for GitHub
+## 6. Availability of models and supplementary materials
 
-- You can safely commit **all files in `LogitGaze/`** except:
-  - `data/` (large and dataset-dependent)
-  - `dataset/` (COCO-Search18, license-restricted)
-  - `saved_models/` (large checkpoints)
-- Add a `.gitignore` with at least:
-
-```gitignore
-data/
-dataset/
-saved_models/
-logs/
-*.pth
-*.npy
-*.npz
-*.pkg
-```
-
-This makes the repo clean, light, and ready to share as the official **LogitGaze** codebase accompanying the papers listed above.
+Pretrained weights, training logs and additional qualitative results for **LogitGaze** and **LogitGaze‑Med** are available upon reasonable request.
+For access to checkpoints or supplementary materials, please contact the corresponding author at: d.lvov@innopolis.ru.
 
