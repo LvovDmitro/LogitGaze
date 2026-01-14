@@ -4,30 +4,43 @@ from pathlib import Path
 import numpy as np
 import torch.nn.functional as F
 
-def create_logit_lens_json_last_layer(hidden_states, norm, lm_head, tokenizer, embedding_layer, model_name, image_filename, save_folder="/repo/gaze_heatmap_predi/llava-interp", top_k=5, image_size=336, patch_size=14, layer='last'):
+def create_logit_lens_json_last_layer(
+    hidden_states,
+    norm,
+    lm_head,
+    tokenizer,
+    embedding_layer,
+    model_name,
+    image_filename,
+    save_folder="./data/logit_lens_TP",
+    top_k=5,
+    image_size=336,
+    patch_size=14,
+    layer="last",
+):
     """
-    Создает logit lens векторы для патчей изображения.
-    
+    Create logit lens vectors for image patches and save them to disk.
+
     Args:
-        hidden_states: Hidden states от модели (список всех слоев)
-        norm: Нормализация
+        hidden_states: Hidden states from the model (list for all layers)
+        norm: Normalization layer
         lm_head: Language model head
-        tokenizer: Токенизатор
-        embedding_layer: Слой эмбеддингов
-        model_name: Имя модели
-        image_filename: Путь к изображению
-        save_folder: Папка для сохранения
-        top_k: Количество топ токенов для каждого патча
-        image_size: Размер изображения (по умолчанию 336 для LLaVA)
-        patch_size: Размер патча (по умолчанию 14 для LLaVA)
-        layer: Какой слой использовать: 'last', 'middle', или индекс слоя (int)
+        tokenizer: Tokenizer
+        embedding_layer: Embedding layer
+        model_name: Model name
+        image_filename: Path to the input image
+        save_folder: Root folder to save outputs (will contain 'logits/' and 'semantics/')
+        top_k: Number of top tokens per image patch
+        image_size: Image size (default 336 for LLaVA)
+        patch_size: Patch size (default 14 for LLaVA)
+        layer: Which layer to use: 'last', 'middle', or explicit integer index
     """
     logits_folder = Path(save_folder) / "logits"
     semantics_folder = Path(save_folder) / "semantics"
     logits_folder.mkdir(parents=True, exist_ok=True)
     semantics_folder.mkdir(parents=True, exist_ok=True)
 
-    # Выбираем нужный слой
+    # Select the requested layer
     if layer == 'last':
         selected_layer_hidden_states = hidden_states[-1]
         layer_idx = len(hidden_states) - 1
@@ -47,52 +60,37 @@ def create_logit_lens_json_last_layer(hidden_states, norm, lm_head, tokenizer, e
 
     sequence_length = last_layer_hidden_states.size(1)
     
-    # Вычисляем количество патчей изображения
-    # Для LLaVA: изображение 336x336 с патчами 14x14 = 24x24 = 576 патчей
-    num_image_patches = (image_size // patch_size) ** 2  # 576 для 336x336
+    # Compute number of image patches
+    # For LLaVA: image 336x336 with 14x14 patches → 24x24 = 576 patches
+    num_image_patches = (image_size // patch_size) ** 2  # 576 for 336x336
     
-    # Находим индексы токенов патчей изображения
-    # В LLaVA токены изображения идут после промпта "USER: <image>"
-    # Нужно найти, где начинаются токены патчей
-    # Обычно это после первых нескольких токенов промпта
-    
-    # Ищем токен <image> в промпте
-    # Промпт: "USER: <image>\nFirst, summarize..."
-    # После токенизации это будет примерно: [<s>, USER, :, <image>, <image>, ..., <image>, \n, First, ...]
-    # Где <image> токены (ID 32000) повторяются num_image_patches раз
-    
-    # Простая эвристика: первые num_image_patches токенов после начала промпта - это патчи
-    # Но нужно учесть, что промпт тоже токенизируется
-    # Обычно структура: [<s>, USER, :, <image> x 576, \n, First, ...]
-    # Значит патчи начинаются с индекса примерно 4-5
-    
-    # Более надежный способ: ищем токены с ID 32000 (<image>) в начале последовательности
-    # Но в hidden_states уже обработанные токены, поэтому используем позиции
-    
-    # Для LLaVA-1.5 структура обычно такая:
-    # - Токены 0-3: <s>, USER, :, пробел
-    # - Токены 4-579: <image> токены (576 патчей)
-    # - Токены 580+: текст промпта и ответа
-    
-    # Определяем начало токенов патчей изображения
-    # В LLaVA структура обычно: [<s>, USER, :, пробел, <image>, <image>, ..., <image>, \n, First, ...]
-    # Токены <image> имеют ID 32000 и повторяются num_image_patches раз
-    
-    # Более надежный способ: используем фиксированное смещение после промпта
-    # Промпт "USER: <image>\n" токенизируется примерно как: [<s>, USER, :, пробел, <image> x 576, \n, ...]
-    # Значит патчи начинаются с индекса 4 (после "<s>", "USER", ":", пробел)
-    prompt_start_idx = 4  # После "<s>", "USER", ":", пробел
+    # Locate token indices corresponding to image patches.
+    # In LLaVA tokens for the image come after the prompt "USER: <image>".
+    #
+    # A typical tokenized structure:
+    #   [<s>, USER, :, <image>, <image>, ..., <image>, \\n, First, ...]
+    # where <image> tokens (ID 32000) repeat num_image_patches times.
+    #
+    # Heuristic layout for LLaVA-1.5:
+    #   tokens 0–3   : <s>, USER, :, space
+    #   tokens 4–579 : <image> tokens (576 patches)
+    #   tokens 580+  : text of the prompt and answer
+    #
+    # In practice we use a fixed offset after the text prompt:
+    #   \"USER: <image>\\n\" → roughly [<s>, USER, :, space, <image> x 576, \\n, ...]
+    # so patches start from index 4.
+    prompt_start_idx = 4  # After \"<s>\", \"USER\", \":\", space
     image_patch_start_idx = prompt_start_idx
     image_patch_end_idx = image_patch_start_idx + num_image_patches
     
-    # Проверяем, что у нас достаточно токенов
+    # Check that we have enough tokens
     if image_patch_end_idx > sequence_length:
         print(f"Warning: Sequence length ({sequence_length}) is less than expected patch end index ({image_patch_end_idx})")
         image_patch_end_idx = sequence_length
         num_image_patches = image_patch_end_idx - image_patch_start_idx
         print(f"Adjusting to {num_image_patches} patches")
     
-    # Извлекаем векторы только для патчей изображения
+    # Extract vectors only for image patches
     word_vectors = []  
     last_layer_top_tokens = []
 
@@ -112,10 +110,10 @@ def create_logit_lens_json_last_layer(hidden_states, norm, lm_head, tokenizer, e
             "probs": [float(prob.item()) for prob in top_values]
         })
     
-    # Если не хватило токенов, дополняем нулями или повторяем последний
+    # If we do not have enough tokens, pad with the last vector
     if len(word_vectors) < num_image_patches:
         print(f"Warning: Found only {len(word_vectors)} image patch tokens, expected {num_image_patches}")
-        # Дополняем последним вектором
+        # Pad using the last available vector
         if len(word_vectors) > 0:
             last_vector = word_vectors[-1]
             while len(word_vectors) < num_image_patches:
@@ -130,7 +128,7 @@ def create_logit_lens_json_last_layer(hidden_states, norm, lm_head, tokenizer, e
 
     word_vectors_array = np.stack(word_vectors, axis=0)
     
-    # Проверяем размерность: должно быть (num_image_patches, top_k, embedding_dim)
+    # Sanity check: shape must be (num_image_patches, top_k, embedding_dim)
     assert word_vectors_array.shape[0] == num_image_patches, \
         f"Expected {num_image_patches} patches, got {word_vectors_array.shape[0]}"
 

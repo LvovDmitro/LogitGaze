@@ -157,20 +157,20 @@ class HookedLVLM:
     def forward(self, 
                 image_path_or_image: Union[str, Image.Image], 
                 prompt: str,
-                output_hidden_states=False,
-                output_attentions=False,
+                output_hidden_states: bool = False,
+                output_attentions: bool = False,
                 ):
         """
-        Прямой проход через модель LLava.
+        Forward pass through the LLaVA model.
 
-        В ранних версиях кода здесь в процессор передавался аргумент `image_sizes`,
-        но в текущей версии `LlavaProcessor` он пробрасывается дальше в токенизатор
-        и вызывает ошибку:
+        Earlier versions of this code passed an `image_sizes` argument to the processor.
+        In recent versions of `LlavaProcessor` this argument is forwarded to the tokenizer
+        and results in the following error:
 
             TypeError: _batch_encode_plus() got an unexpected keyword argument 'image_sizes'
 
-        Поэтому мы убираем `image_sizes` из вызова процессора — он не обязателен
-        для получения корректных hidden states.
+        Therefore we remove `image_sizes` from the processor call – it is not required
+        to obtain correct hidden states.
         """
         # Open image if needed
         if isinstance(image_path_or_image, str):
@@ -178,7 +178,7 @@ class HookedLVLM:
         else:
             image = image_path_or_image
 
-        # Prepare inputs (без image_sizes, чтобы избежать ошибки в tokenizer)
+        # Prepare inputs (without image_sizes to avoid tokenizer error)
         inputs = self.processor(text=prompt, images=image, return_tensors="pt")
 
         inputs.to(self.model.device)

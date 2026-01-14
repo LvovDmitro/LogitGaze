@@ -5,7 +5,7 @@ from PIL import Image
 from tqdm import tqdm
 import numpy as np
 
-# Добавляем корневую директорию проекта в sys.path
+# Add project root to sys.path so that src/ modules can be imported
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
 if project_root not in sys.path:
@@ -45,7 +45,7 @@ def process_images(image_folder, save_folder, device, quantize_type, num_images)
     for image_path in image_paths:
         try:
             image = Image.open(image_path)
-            # print("image",np.array(image).shape) разный размер у каждой картинки
+            # print("image", np.array(image).shape)  # images can have different sizes
             images[image_path] = image
         except IOError:
             print(f"Could not open image file: {image_path}")

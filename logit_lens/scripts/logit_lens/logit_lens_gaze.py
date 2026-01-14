@@ -5,7 +5,7 @@ from PIL import Image
 from tqdm import tqdm
 import torch
 
-# Добавляем корневую директорию проекта в sys.path
+# Add project root to sys.path so that src/ modules can be imported
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
 if project_root not in sys.path:
