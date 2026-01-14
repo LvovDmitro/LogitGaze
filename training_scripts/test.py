@@ -20,7 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from models.models import Transformer
-from models.gazeformer import gazeformer
+from models.logitgaze_model import LogitGazeModel
 from utils.utils import seed_everything, get_args_parser_test
 from metrics.metrics import postprocessScanpaths, get_seq_score, get_seq_score_time
 import os
@@ -71,7 +71,12 @@ def test(args):
         logit_lens_dim=args.logit_lens_dim if args.use_logit_lens else 4096,
         logit_lens_top_k=args.logit_lens_top_k if args.use_logit_lens else 5
     ).to(device)
-    model = gazeformer(transformer = transformer, spatial_dim = (args.im_h, args.im_w), max_len = args.max_len, device = device).to(device)
+    model = LogitGazeModel(
+        transformer=transformer,
+        spatial_dim=(args.im_h, args.im_w),
+        max_len=args.max_len,
+        device=device,
+    ).to(device)
     model.load_state_dict(torch.load(trained_model, map_location=device)['model'])
     model.eval()
     dataset_root = args.dataset_dir
@@ -139,7 +144,7 @@ def main(args):
     
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Gaze Transformer Test', parents=[get_args_parser_test()])
+    parser = argparse.ArgumentParser('LogitGaze Test', parents=[get_args_parser_test()])
     args = parser.parse_args()
     main(args)
     

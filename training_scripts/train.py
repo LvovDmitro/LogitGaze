@@ -23,7 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from models.models import Transformer
-from models.gazeformer import gazeformer
+from models.logitgaze_model import LogitGazeModel
 from utils.utils import seed_everything, fixations2seq, get_args_parser_train, save_model_train
 from utils.dataset import fixation_dataset, COCOSearch18Collator
 
@@ -157,7 +157,7 @@ def main(args):
         outfile.close()
 
 
-    model_name = 'gazeformer_'+str(args.num_encoder)+'E_'+str(args.num_decoder)+'D_'+str(args.batch_size)+'_'+str(args.hidden_dim)+'d'
+    model_name = 'logitgaze_'+str(args.num_encoder)+'E_'+str(args.num_decoder)+'D_'+str(args.batch_size)+'_'+str(args.hidden_dim)+'d'
     dataset_root = args.dataset_dir
     train_file = args.train_file
     valid_file = args.valid_file
@@ -212,7 +212,13 @@ def main(args):
         logit_lens_top_k=args.logit_lens_top_k
     ).to(device)
 
-    model = gazeformer(transformer, spatial_dim = (args.im_h, args.im_w), dropout=args.cls_dropout, max_len = args.max_len, device = device).to(device)
+    model = LogitGazeModel(
+        transformer=transformer,
+        spatial_dim=(args.im_h, args.im_w),
+        dropout=args.cls_dropout,
+        max_len=args.max_len,
+        device=device,
+    ).to(device)
 
     loss_fn_token = torch.nn.NLLLoss()
     loss_fn_y = nn.L1Loss(reduction='none')
@@ -250,7 +256,7 @@ def main(args):
     
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Gazeformer Train', parents=[get_args_parser_train()])
+    parser = argparse.ArgumentParser('LogitGaze Train', parents=[get_args_parser_train()])
     args = parser.parse_args()
     main(args)
     

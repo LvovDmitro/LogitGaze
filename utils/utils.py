@@ -25,7 +25,7 @@ def fixations2seq(fixations,  max_len):
     return processed_fixs
     
 def get_args_parser_test():
-    parser = argparse.ArgumentParser('Gaze Transformer Tester', add_help=False)
+    parser = argparse.ArgumentParser('LogitGaze Tester', add_help=False)
     parser.add_argument('--dataset_dir', default= './dataset', type=str, help="Dataset Directory")
     parser.add_argument('--img_ftrs_dir', default= './dataset/image_features', type=str, help="Directory of precomputed ResNet features")
     parser.add_argument('--im_h', default=20, type=int, help="Height of feature map input to encoder")
@@ -38,7 +38,7 @@ def get_args_parser_test():
     parser.add_argument('--nhead', default=8, type=int, help="Number of heads for transformer attention layers")
     parser.add_argument('--img_hidden_dim', default=2048, type=int, help="Channel size of initial ResNet feature map")
     parser.add_argument('--lm_hidden_dim', default=768, type=int, help="Dimensionality of target embeddings from language model")
-    parser.add_argument('--trained_model', default='./checkpoints/gazeformer_cocosearch_TP.pkg', type=str, help="Trained model checkpoint to run for inference")
+    parser.add_argument('--trained_model', default='./checkpoints/logitgaze_cocosearch_TP.pkg', type=str, help="Trained model checkpoint to run for inference")
     parser.add_argument('--seed', default=42, type=int, help="Seed")
     parser.add_argument('--cuda', default=0, type=int, help="CUDA core to load models and data")
     parser.add_argument('--condition', default='present', type=str, help="Search condition (present/absent)")
@@ -60,7 +60,7 @@ def get_args_parser_test():
     return parser
     
 def get_args_parser_train():
-    parser = argparse.ArgumentParser('Gaze Transformer Trainer', add_help=False)
+    parser = argparse.ArgumentParser('LogitGaze Trainer', add_help=False)
     parser.add_argument('--head_lr', default=1e-6, type=float, help="Learning rate for SlowOpt")
     parser.add_argument('--tail_lr', default=1e-4, type=float, help="Learning rate for FastOpt")
     parser.add_argument('--belly_lr', default=2e-6, type=float, help="Learning rate for MidOpt")
@@ -85,7 +85,7 @@ def get_args_parser_train():
     parser.add_argument('--decoder_dropout', default=0.2, type=float, help="Decoder and fusion step dropout rate")
     parser.add_argument('--cls_dropout', default=0.4, type=float, help="Final scanpath prediction dropout rate")
     parser.add_argument('--retraining', default=False, action='store_true', help="Retraining from a checkpoint")
-    parser.add_argument('--last_checkpoint', default='./saved_models/gazeformer_6E_6D_32_512d_70.pkg', type=str, help="Checkpoint for retraining")
+    parser.add_argument('--last_checkpoint', default='./saved_models/logitgaze_6E_6D_32_512d_70.pkg', type=str, help="Checkpoint for retraining")
     parser.add_argument('--model_root', default='./saved_models/trained', type=str, help="Checkpoint directory")
     parser.add_argument('--cuda', default=0, type=int, help="CUDA core to load models and data")
     parser.add_argument('--num_workers', default=6, type=int, help="Number of workers for data loader")

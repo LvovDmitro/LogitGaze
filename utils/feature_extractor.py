@@ -47,7 +47,7 @@ def text_data(dataset_path, device = 'cuda:0', lm_model = 'sentence-transformers
         
         
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser('Gazeformer Feature Extractor Utils', add_help=False)
+    parser = argparse.ArgumentParser('LogitGaze Feature Extractor Utils', add_help=False)
     parser.add_argument('--dataset_path', default= '/home/sounakm/dataset', type=str)
     parser.add_argument('--lm_model', default= 'sentence-transformers/stsb-roberta-base-v2', type=str)
     parser.add_argument('--cuda', default=0, type=int)

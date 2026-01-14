@@ -1,17 +1,20 @@
 # LogitGaze
 
-LogitGaze is a cleaned, code-only version of the project that integrates:
+LogitGaze is a transformer-based model for scanpath / fixation prediction that integrates:
 
-- **Gazeformer** — transformer-based model for scanpath / fixation prediction
-- **Logit Lens** — semantic features extracted from LLaVA for each image patch
+- **Transformer-based scanpath model** — predicts full fixation sequences conditioned on the image and search target.
+- **Logit Lens features** — semantic vectors extracted from a vision–language model (LLaVA) for each image patch.
 
-This directory is ready to be pushed to GitHub as a standalone repo.
+This directory is the standalone, cleaned codebase for the **LogitGaze** paper:
+
+- *“LogitGaze: Predicting Human Attention Using Semantic Information from Vision-Language Models”* (Lvov, Pershin), ICLR 2025 – OpenReview: `https://openreview.net/forum?id=Om4j6IVb42`
+- *“LogitGaze-Med: Semantic-Guided Scanpath Prediction in Medical Imaging”* (Lvov, Pershin et al.), OpenReview: `https://openreview.net/forum?id=lTAtQW1Ufi`
 
 ## 1. Project Layout
 
 ```
 LogitGaze/
-├── models/               # Gazeformer model architecture
+├── models/               # LogitGaze model architecture
 ├── utils/                # Datasets, feature extraction, CLI args
 ├── metrics/              # Evaluation metrics
 ├── training_scripts/     # train.py, test.py
@@ -86,7 +89,7 @@ Key defaults (can be overridden):
 Assuming you trained and have a checkpoint at:
 
 ```text
-saved_models/trained/train_13-01-2026-09-56-20/gazeformer_6E_6D_16_512d_27.pkg
+saved_models/trained/train_13-01-2026-09-56-20/logitgaze_6E_6D_16_512d_27.pkg
 ```
 
 Run:
@@ -96,7 +99,7 @@ cd /repo/LogitGaze
 
 python training_scripts/test.py \
   --use_logit_lens \
-  --trained_model "./saved_models/trained/train_13-01-2026-09-56-20/gazeformer_6E_6D_16_512d_27.pkg" \
+  --trained_model "./saved_models/trained/train_13-01-2026-09-56-20/logitgaze_6E_6D_16_512d_27.pkg" \
   --dataset_dir "./dataset" \
   --img_ftrs_dir "./dataset/image_features" \
   --logit_lens_dir "./data/logit_lens_TP" \
@@ -122,5 +125,5 @@ logs/
 *.pkg
 ```
 
-This makes the repo clean, light, and ready to share as the official **LogitGaze** codebase.
+This makes the repo clean, light, and ready to share as the official **LogitGaze** codebase accompanying the papers listed above.
 
